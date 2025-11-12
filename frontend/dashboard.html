@@ -5,60 +5,155 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Farmer Dashboard | AgriLink</title>
   <link rel="stylesheet" href="css/style.css" />
-  <style>
-    body { font-family: Poppins, sans-serif; margin: 0; background: #f4f6f9; }
-    header { background: #2e7d32; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-    .container { padding: 30px; }
-    h1 { color: #2e7d32; }
-    .btn { background: #2e7d32; color: white; padding: 10px 16px; border: none; border-radius: 5px; cursor: pointer; }
-    .card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-    th { background: #2e7d32; color: white; }
-    .actions button { margin-right: 5px; }
-  </style>
 </head>
 <body>
-  <header>
-    <h2>🌾 AgriLink Farmer Dashboard</h2>
-    <button id="logoutBtn" class="btn">Logout</button>
+  <header style="background:#2e7d32;color:white;padding:15px;display:flex;justify-content:space-between;align-items:center;">
+    <h2>🌾 Farmer Dashboard</h2>
+    <button id="logoutBtn" style="background:white;color:#2e7d32;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">Logout</button>
   </header>
 
-  <div class="container">
-    <div class="card">
-      <h1>Welcome, <span id="farmerName">Farmer</span></h1>
-      <button id="toggleAddCrop" class="btn">+ Add Crop</button>
-    </div>
+  <main style="padding:20px;">
+    <h3>Add New Product</h3>
+    <form id="addProductForm">
+      <input type="text" id="name" placeholder="Crop Name" required><br><br>
+      <input type="number" id="price" placeholder="Price per kg" required><br><br>
+      <input type="number" id="quantity" placeholder="Quantity (kg)" required><br><br>
+      <input type="text" id="location" placeholder="Location" required><br><br>
+      <button type="submit" style="background:#2e7d32;color:white;padding:8px 15px;border:none;border-radius:4px;cursor:pointer;">Add Product</button>
+    </form>
 
-    <div class="card" id="addCropSection" style="display:none;">
-      <h2>Add New Crop</h2>
-      <form id="cropForm">
-        <input type="text" id="cropName" placeholder="Crop Name" required />
-        <input type="number" id="quantity" placeholder="Quantity (kg)" required />
-        <input type="number" id="price" placeholder="Price (₹ per kg)" required />
-        <input type="text" id="location" placeholder="Location" required />
-        <button type="submit" class="btn">Add Crop</button>
-      </form>
-    </div>
+    <hr>
+    <h3>Your Products</h3>
+    <div id="productList"></div>
+  </main>
 
-    <div class="card">
-      <h2>Your Listed Crops</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Crop</th>
-            <th>Quantity (kg)</th>
-            <th>Price (₹/kg)</th>
-            <th>Location</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="cropTable"></tbody>
-      </table>
-    </div>
-  </div>
+  <script>
+    // ✅ Immediate role and login validation
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user || user.role.toLowerCase() !== "farmer") {
+      alert("Access denied! Only farmers can view this page.");
+      window.location.href = "marketplace.html";
+    }
+  </script>
 
-  <script src="js/main.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const user = JSON.parse(localStorage.getItem("user"));
+      const token = localStorage.getItem("token");
+
+      if (!user || !token) {
+        alert("Please log in first");
+        window.location.href = "login.html";
+        return;
+      }
+
+      const form = document.getElementById("addProductForm");
+      const list = document.getElementById("productList");
+
+      // ✅ Add new product
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const product = {
+          name: document.getElementById("name").value.trim(),
+          price: document.getElementById("price").value,
+          quantity: document.getElementById("quantity").value,
+          location: document.getElementById("location").value.trim(),
+        };
+
+        try {
+          const res = await fetch("http://localhost:5000/api/products", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(product),
+          });
+
+          const data = await res.json();
+
+          if (res.ok) {
+            alert("✅ Product added successfully!");
+            form.reset();
+            loadProducts();
+          } else {
+            alert("❌ " + (data.message || "Error adding product"));
+          }
+        } catch (error) {
+          console.error("Add product error:", error);
+          alert("⚠️ Failed to add product");
+        }
+      });
+
+      // ✅ Load all farmer products
+      async function loadProducts() {
+        try {
+          const res = await fetch(`http://localhost:5000/api/products/farmer/${user._id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          const products = await res.json();
+          list.innerHTML = "";
+
+          if (!Array.isArray(products) || products.length === 0) {
+            list.innerHTML = "<p>No products added yet.</p>";
+            return;
+          }
+
+          products.forEach((p) => {
+            const div = document.createElement("div");
+            div.classList.add("product-item");
+            div.style.marginBottom = "8px";
+            div.innerHTML = `
+              <strong>${p.name}</strong> — ₹${p.price}/kg, ${p.quantity}kg (${p.location})
+              <button class="delete-btn" data-id="${p._id}" style="margin-left:10px;background:#c62828;color:white;border:none;padding:3px 6px;border-radius:3px;cursor:pointer;">🗑️</button>
+            `;
+            list.appendChild(div);
+          });
+
+          // ✅ Attach delete event listener for all delete buttons
+          document.querySelectorAll(".delete-btn").forEach((btn) => {
+            btn.addEventListener("click", () => deleteProduct(btn.dataset.id));
+          });
+        } catch (error) {
+          console.error("Load products error:", error);
+          list.innerHTML = "<p>⚠️ Failed to load products.</p>";
+        }
+      }
+
+      // ✅ Delete a product
+      async function deleteProduct(id) {
+        if (!confirm("Delete this product?")) return;
+
+        try {
+          const res = await fetch(`http://localhost:5000/api/products/${id}`, {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          const data = await res.json();
+          alert(data.message || "Deleted successfully");
+          loadProducts();
+        } catch (error) {
+          console.error("Delete error:", error);
+          alert("⚠️ Failed to delete product");
+        }
+      }
+
+      // ✅ Logout function
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        localStorage.clear();
+        window.location.href = "login.html";
+      });
+
+      // Initial load
+      loadProducts();
+    });
+  </script>
 </body>
 </html>

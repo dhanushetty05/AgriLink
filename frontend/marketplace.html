@@ -98,72 +98,97 @@
   </div>
 
   <script>
-    const token = localStorage.getItem("token");
-    const productList = document.getElementById("product-list");
-    const msg = document.getElementById("msg");
+  const user = JSON.parse(localStorage.getItem("user"));
 
-    if (!token) {
-      msg.innerText = "⚠️ Please login to view the marketplace.";
+  if (!user) {
+    // 🧭 Not logged in → redirect to login
+    alert("Please log in to access the marketplace.");
+    window.location.href = "login.html";
+  } else if (user.role.toLowerCase() !== "buyer") {
+    // 🚫 Logged in but not a buyer
+    alert("Access denied! Only buyers can access the marketplace.");
+    window.location.href = "dashboard.html";
+  }
+
+
+  if (!token || !user) {
+    msg.innerText = "⚠️ Please login to view the marketplace.";
+    productList.innerHTML = "";
+  } else {
+    fetchProducts();
+  }
+
+  async function fetchProducts() {
+    try {
+      const res = await fetch("http://localhost:5000/api/products");
+      const products = await res.json();
+
+      if (products.length === 0) {
+        productList.innerHTML = "<p>No products available right now.</p>";
+        return;
+      }
+
       productList.innerHTML = "";
-    } else {
-      fetchProducts();
+      products.forEach((p) => {
+        const div = document.createElement("div");
+        div.classList.add("product-card");
+
+        div.innerHTML = `
+          <h3>${p.name}</h3>
+          <p><strong>Price:</strong> ₹${p.price}</p>
+          <p><strong>Quantity:</strong> ${p.quantity} kg</p>
+          <p><strong>Farmer:</strong> ${p.farmerName || "Unknown"}</p>
+          ${
+            user.role === "Buyer"
+              ? `<button class="btn-buy" onclick="placeOrder('${p._id}')">Order Now</button>`
+              : `<button class="btn-buy" disabled style="background:#ccc;cursor:not-allowed;">Farmer View</button>`
+          }
+        `;
+        productList.appendChild(div);
+      });
+    } catch (error) {
+      productList.innerHTML = "<p>⚠️ Failed to load products.</p>";
+      console.error(error);
+    }
+  }
+
+  // Only buyers can place orders
+  async function placeOrder(productId) {
+    if (user.role !== "Buyer") {
+      alert("Only buyers can place orders!");
+      return;
     }
 
-    async function fetchProducts() {
-      try {
-        const res = await fetch("http://localhost:5000/api/products");
-        const products = await res.json();
+    const quantity = prompt("Enter quantity to order:");
+    if (!quantity || quantity <= 0) return alert("Invalid quantity!");
 
-        if (products.length === 0) {
-          productList.innerHTML = "<p>No products available right now.</p>";
-          return;
-        }
+    try {
+      const res = await fetch("http://localhost:5000/api/orders/place", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ productId, quantity }),
+      });
 
-        productList.innerHTML = "";
-        products.forEach(p => {
-          const div = document.createElement("div");
-          div.classList.add("product-card");
-          div.innerHTML = `
-            <h3>${p.name}</h3>
-            <p><strong>Price:</strong> ₹${p.price}</p>
-            <p><strong>Quantity:</strong> ${p.quantity}</p>
-            <p><strong>Farmer:</strong> ${p.farmerName || "Unknown"}</p>
-            <button class="btn-buy" onclick="placeOrder('${p._id}')">Order Now</button>
-          `;
-          productList.appendChild(div);
-        });
-      } catch (error) {
-        productList.innerHTML = "<p>⚠️ Failed to load products.</p>";
-        console.error(error);
+      const data = await res.json();
+      if (res.ok) {
+        alert("✅ Order placed successfully!");
+      } else {
+        alert("❌ " + data.message);
       }
+    } catch (err) {
+      console.error(err);
+      alert("⚠️ Server error while placing order");
     }
+  }
 
-    async function placeOrder(productId) {
-      try {
-        const res = await fetch("http://localhost:5000/api/orders", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ productId }),
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          alert("✅ Order placed successfully!");
-        } else {
-          alert("❌ " + data.message);
-        }
-      } catch (err) {
-        alert("⚠️ Server error: " + err.message);
-      }
-    }
-
-    function logout() {
-      localStorage.removeItem("token");
-      window.location.href = "login.html";
-    }
-  </script>
+  function logout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "login.html";
+  }
+</script>
 </body>
 </html>

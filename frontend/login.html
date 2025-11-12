@@ -6,6 +6,11 @@
   <title>AgriLink | Login</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
+    body {
+      background: #f3f7f2;
+      font-family: Arial, sans-serif;
+    }
+
     .auth-container {
       width: 400px;
       margin: 100px auto;
@@ -15,6 +20,7 @@
       padding: 30px;
       text-align: center;
     }
+
     input {
       width: 100%;
       padding: 10px;
@@ -22,6 +28,7 @@
       border-radius: 5px;
       border: 1px solid #ccc;
     }
+
     button {
       background-color: #3b7d2a;
       color: white;
@@ -29,13 +36,22 @@
       border: none;
       border-radius: 5px;
       cursor: pointer;
+      width: 100%;
     }
+
     button:hover {
       background-color: #2e601f;
     }
+
     a {
       color: #3b7d2a;
       text-decoration: none;
+    }
+
+    #msg {
+      margin-top: 15px;
+      font-weight: bold;
+      color: red;
     }
   </style>
 </head>
@@ -54,31 +70,63 @@
   </div>
 
   <script>
-    async function loginUser() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      const msg = document.getElementById("msg");
+  async function loginUser() {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const msg = document.getElementById("msg");
 
-      try {
-        const res = await fetch("http://localhost:5000/api/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password })
-        });
-
-        const data = await res.json();
-        if (res.ok && data.token) {
-          localStorage.setItem("token", data.token);
-          msg.innerText = "✅ Login successful! Redirecting...";
-          setTimeout(() => window.location.href = "marketplace.html", 1500);
-        } else {
-          msg.innerText = "❌ " + data.message;
-        }
-      } catch (error) {
-        msg.innerText = "⚠️ Server error: " + error.message;
-      }
+    if (!email || !password) {
+      msg.innerText = "⚠️ Please fill in both fields.";
+      return;
     }
-  </script>
+
+    try {
+      // ✅ Use correct backend route (confirmed from your setup)
+      const res = await fetch("http://localhost:5000/api/users/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      // ✅ Safely handle non-JSON responses
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error("Server did not return JSON. Check your backend route.");
+      }
+
+      console.log("Login Response:", data);
+
+      if (res.ok && data.token && data.user) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+
+        msg.style.color = "green";
+        msg.innerText = "✅ Login successful! Redirecting...";
+
+        setTimeout(() => {
+          const role = data.user.role?.toLowerCase();
+          if (role === "farmer") {
+            window.location.href = "dashboard.html";
+          } else if (role === "buyer") {
+            window.location.href = "marketplace.html";
+          } else {
+            msg.style.color = "red";
+            msg.innerText = "⚠️ Unknown user role. Contact admin.";
+          }
+        }, 1000);
+      } else {
+        msg.style.color = "red";
+        msg.innerText = "❌ " + (data.message || "Invalid credentials");
+      }
+    } catch (error) {
+      console.error("Login Error:", error);
+      msg.style.color = "red";
+      msg.innerText = "⚠️ " + error.message;
+    }
+  }
+</script>
 
 </body>
 </html>

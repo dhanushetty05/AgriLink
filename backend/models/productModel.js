@@ -1,37 +1,14 @@
-// models/productModel.js
+const mongoose = require("mongoose");
 
-const mongoose = require('mongoose');
-
-const productSchema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: true,
-    },
-    category: {
-      type: String,
-      required: true, // e.g., "Grains", "Vegetables"
-    },
-    quantity: {
-      type: Number,
-      required: true,
-    },
-    price: {
-      type: Number,
-      required: true,
-    },
-    description: {
-      type: String,
-    },
-    farmer: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User', // links to User (farmer)
-      required: true,
-    },
+const productSchema = new mongoose.Schema({
+  name: String,
+  quantity: Number,
+  price: Number,
+  location: String,
+  farmerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User", // this line is critical
   },
-  {
-    timestamps: true,
-  }
-);
+});
 
-module.exports = mongoose.model('Product', productSchema);
+module.exports = mongoose.model("Product", productSchema);
