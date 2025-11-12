@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Farmer Dashboard | AgriLink</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body { font-family: Poppins, sans-serif; margin: 0; background: #f4f6f9; }
+    header { background: #2e7d32; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .container { padding: 30px; }
+    h1 { color: #2e7d32; }
+    .btn { background: #2e7d32; color: white; padding: 10px 16px; border: none; border-radius: 5px; cursor: pointer; }
+    .card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    th { background: #2e7d32; color: white; }
+    .actions button { margin-right: 5px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h2>🌾 AgriLink Farmer Dashboard</h2>
+    <button id="logoutBtn" class="btn">Logout</button>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <h1>Welcome, <span id="farmerName">Farmer</span></h1>
+      <button id="toggleAddCrop" class="btn">+ Add Crop</button>
+    </div>
+
+    <div class="card" id="addCropSection" style="display:none;">
+      <h2>Add New Crop</h2>
+      <form id="cropForm">
+        <input type="text" id="cropName" placeholder="Crop Name" required />
+        <input type="number" id="quantity" placeholder="Quantity (kg)" required />
+        <input type="number" id="price" placeholder="Price (₹ per kg)" required />
+        <input type="text" id="location" placeholder="Location" required />
+        <button type="submit" class="btn">Add Crop</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Your Listed Crops</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Crop</th>
+            <th>Quantity (kg)</th>
+            <th>Price (₹/kg)</th>
+            <th>Location</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="cropTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

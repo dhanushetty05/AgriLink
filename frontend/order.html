@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orders | AgriLink</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body { font-family: Poppins, sans-serif; margin: 0; background: #f4f6f9; }
+    header { background: #2e7d32; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .container { padding: 30px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    th { background: #2e7d32; color: white; }
+  </style>
+</head>
+<body>
+  <header>
+    <h2>📦 Farmer Orders</h2>
+    <button id="backBtn" class="btn">⬅ Dashboard</button>
+  </header>
+
+  <div class="container">
+    <table>
+      <thead>
+        <tr>
+          <th>Crop</th>
+          <th>Buyer</th>
+          <th>Quantity</th>
+          <th>Total (₹)</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="ordersTable"></tbody>
+    </table>
+  </div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

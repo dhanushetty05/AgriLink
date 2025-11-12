@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriLink | Register</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .auth-container {
+      width: 400px;
+      margin: 100px auto;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      padding: 30px;
+      text-align: center;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #3b7d2a;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #2e601f;
+    }
+    a {
+      color: #3b7d2a;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-container">
+    <h2>🌾 Register to AgriLink</h2>
+
+    <input type="text" id="name" placeholder="Full Name" required />
+    <input type="email" id="email" placeholder="Email" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <select id="role">
+      <option value="farmer">Farmer</option>
+      <option value="buyer">Buyer</option>
+      <option value="admin">Admin</option>
+    </select>
+
+    <button onclick="registerUser()">Register</button>
+
+    <p>Already have an account? <a href="login.html">Login here</a></p>
+    <p id="msg"></p>
+  </div>
+
+  <script>
+    async function registerUser() {
+      const name = document.getElementById("name").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const role = document.getElementById("role").value;
+      const msg = document.getElementById("msg");
+
+      try {
+        const res = await fetch("http://localhost:5000/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password, role })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          msg.innerText = "✅ Registered successfully! Redirecting to login...";
+          setTimeout(() => window.location.href = "login.html", 1500);
+        } else {
+          msg.innerText = "❌ " + data.message;
+        }
+      } catch (error) {
+        msg.innerText = "⚠️ Server error: " + error.message;
+      }
+    }
+  </script>
+
+</body>
+</html>
